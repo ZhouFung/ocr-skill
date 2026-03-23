@@ -1,0 +1,8 @@
+{
+  "name": "ocr-skill",
+  "version": "1.0.0",
+  "description": "图片和PDF文字识别技能，支持中英文混合OCR",
+  "author": "小爪",
+  "requires": ["tesseract-ocr", "poppler-utils", "imagemagick"],
+  "entry_point": "scripts/ocr.sh"
+}
