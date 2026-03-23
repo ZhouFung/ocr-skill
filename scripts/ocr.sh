@@ -22,14 +22,22 @@ fi
 INPUT_FILE="$1"
 LANG_OPTION="${2:-chi_sim+eng}"
 
+# 将用户友好的语言选项转换为Tesseract语言代码
+case "$LANG_OPTION" in
+    zh)    LANG_OPTION="chi_sim" ;;
+    en)    LANG_OPTION="eng" ;;
+    zh+en) LANG_OPTION="chi_sim+eng" ;;
+esac
+
 # 验证文件存在
 if [ ! -f "$INPUT_FILE" ]; then
     echo "错误: 文件不存在 - $INPUT_FILE"
     exit 1
 fi
 
-# 检查文件类型
+# 检查文件类型（统一转为大写用于判断，小写用于保存）
 FILE_EXT=$(echo "$INPUT_FILE" | awk -F. '{print $NF}' | tr '[:lower:]' '[:upper:]')
+FILE_EXT_LOWER=$(echo "$FILE_EXT" | tr '[:upper:]' '[:lower:]')
 
 echo "=== 小爪OCR识别开始 ==="
 echo "输入文件: $INPUT_FILE"
@@ -69,7 +77,7 @@ if [[ "$FILE_EXT" == "PDF" ]]; then
     fi
 elif [[ "$FILE_EXT" == "JPG" || "$FILE_EXT" == "JPEG" || "$FILE_EXT" == "PNG" || "$FILE_EXT" == "GIF" || "$FILE_EXT" == "WEBP" ]]; then
     echo "正在处理图片文件..."
-    cp "$INPUT_FILE" "$TEMP_DIR/input.$FILE_EXT"
+    cp "$INPUT_FILE" "$TEMP_DIR/input.$FILE_EXT_LOWER"
 else
     echo "错误: 不支持的文件格式 - $FILE_EXT"
     exit 1
@@ -78,8 +86,11 @@ fi
 # 执行OCR识别
 echo "正在执行OCR识别..."
 
-# 查找所有图片文件
+# 查找所有图片文件（启用nullglob避免未匹配的glob模式作为字面量进入数组）
+# 搜索全部扩展名：PDF转换输出固定为.png，图片文件复制时使用原始小写扩展名
+shopt -s nullglob
 IMAGE_FILES=($TEMP_DIR/*.png $TEMP_DIR/*.jpg $TEMP_DIR/*.jpeg $TEMP_DIR/*.gif $TEMP_DIR/*.webp)
+shopt -u nullglob
 
 if [ ${#IMAGE_FILES[@]} -eq 0 ]; then
     echo "错误: 未找到可处理的图像文件"
@@ -112,7 +123,7 @@ for IMG_FILE in "${IMAGE_FILES[@]}"; do
         
         # 执行Tesseract OCR
         if command -v tesseract >/dev/null 2>&1; then
-            tesseract "$IMG_FILE" stdout -l "$LANG_OPTION" --psm 3 2>/dev/null >> "$OUTPUT_FILE"
+            tesseract "$IMG_FILE" stdout -l "$LANG_OPTION" --psm 3 2>/dev/null >> "$OUTPUT_FILE" || true
         else
             echo "错误: Tesseract OCR未安装。请运行: sudo apt-get install tesseract-ocr tesseract-ocr-chi-sim tesseract-ocr-eng" >> "$OUTPUT_FILE"
             echo "或者: brew install tesseract tesseract-lang" >> "$OUTPUT_FILE"
