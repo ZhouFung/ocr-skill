@@ -93,6 +93,47 @@ teardown() {
     [[ "$output" == *"chi_sim+eng"* ]]
 }
 
+@test "supports --input named argument" {
+    run bash "$SCRIPT" --input "$FIXTURES/sample.png"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"PNG"* ]]
+}
+
+@test "supports --lang named argument" {
+    run bash "$SCRIPT" --input "$FIXTURES/sample.png" --lang zh+en
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"chi_sim+eng"* ]]
+}
+
+@test "supports --plain for image OCR" {
+    run bash "$SCRIPT" --input "$FIXTURES/sample.png" --lang zh+en --plain
+    [ "$status" -eq 0 ]
+    [ "$output" = "Sample OCR text" ]
+}
+
+@test "supports --plain for text-based PDF OCR" {
+    export OCR_MOCK_PDF_IMAGE_COUNT=0
+    run bash "$SCRIPT" --input "$FIXTURES/sample.pdf" --lang zh+en --plain
+    [ "$status" -eq 0 ]
+    [ "$output" = "Extracted PDF text content" ]
+}
+
+@test "exits non-zero in plain mode when tesseract is missing" {
+    TEST_TMPDIR="$(mktemp -d)"
+    for cmd in awk basename bash cat cp mktemp rm tr wc; do
+        ln -s "$(command -v "$cmd")" "$TEST_TMPDIR/$cmd"
+    done
+    run env PATH="$TEST_TMPDIR" bash "$SCRIPT" --input "$FIXTURES/sample.png" --plain
+    [ "$status" -ne 0 ]
+    [[ "$output" == *"Tesseract OCR未安装"* ]]
+}
+
+@test "exits non-zero for unsupported named option" {
+    run bash "$SCRIPT" --bad-option
+    [ "$status" -ne 0 ]
+    [[ "$output" == *"不支持的参数"* ]]
+}
+
 @test "passes through unrecognised language codes unchanged" {
     run bash "$SCRIPT" "$FIXTURES/sample.png" "fra"
     [[ "$output" == *"fra"* ]]
@@ -204,17 +245,6 @@ teardown() {
     export OCR_MOCK_PDF_IMAGE_COUNT=0
     run bash "$SCRIPT" "$FIXTURES/sample.pdf"
     [ "$status" -eq 0 ]
-}
-
-# ---------------------------------------------------------------------------
-# Missing tesseract
-# ---------------------------------------------------------------------------
-
-@test "reports missing tesseract when it is not installed" {
-    # Override PATH to exclude both real and mock tesseract
-    NO_TESS_PATH=$(echo "$PATH" | tr ':' '\n' | grep -v "$MOCKS" | tr '\n' ':' | sed 's/:$//')
-    run env PATH="$NO_TESS_PATH" bash "$SCRIPT" "$FIXTURES/sample.png"
-    [[ "$output" == *"Tesseract OCR未安装"* ]]
 }
 
 # ---------------------------------------------------------------------------

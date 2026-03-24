@@ -1,28 +1,20 @@
 # OCR技能使用指南
 
-## 功能说明
-这个技能用于从图片（JPG/PNG）和PDF文件中提取文字内容。
+从图片或 PDF 提取纯文本。
 
-## 使用方法
-1. 将图片或PDF文件发送给小爪
-2. 小爪会自动识别并返回文字内容
-3. 支持中英文混合识别
-
-## 技术细节
-- 使用Tesseract OCR引擎（v5+）
-- 支持中文（chi_sim）和英文（eng）语言包
-- 自动处理常见格式问题
-
-## 注意事项
-- 图片清晰度会影响识别准确率
-- 手写体识别效果有限
-- 复杂排版可能需要后期整理
-
-## 测试命令
+## 调用
 ```bash
-# 测试图片识别
-./scripts/ocr.sh --input test.jpg --lang chi_sim+eng
+./scripts/ocr.sh --input <文件路径> --lang zh+en --plain
+```
 
-# 测试PDF识别
-./scripts/ocr.sh --input document.pdf --lang chi_sim+eng
+可选语言：`zh` / `en` / `zh+en`（默认 `zh+en`）
+
+## 返回
+- 成功：stdout 为识别文本
+- 失败：返回错误信息，退出码非 0
+
+## 测试
+
+```bash
+./scripts/test.sh
 ```
