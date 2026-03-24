@@ -1,0 +1,3 @@
+#!/bin/bash
+# Mock tesseract: writes sample OCR output to stdout
+echo "Sample OCR text"

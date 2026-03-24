@@ -1,0 +1,6 @@
+#!/bin/bash
+# Mock pdftotext: writes sample text to the output file
+OUTPUT_FILE="$2"
+if [ -n "$OUTPUT_FILE" ]; then
+    echo "Extracted PDF text content" > "$OUTPUT_FILE"
+fi

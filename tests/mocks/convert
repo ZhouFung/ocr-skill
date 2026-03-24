@@ -1,0 +1,10 @@
+#!/bin/bash
+# Mock convert (ImageMagick): copies a dummy PNG to any output matching page-*.png
+for arg in "$@"; do
+    if [[ "$arg" == *"/page-"*".png" ]]; then
+        # Create a tiny stub PNG so the script finds image files
+        STUB_DIR=$(dirname "$arg")
+        cp "$(dirname "$0")/../fixtures/sample.png" "$STUB_DIR/page-000.png"
+        break
+    fi
+done
